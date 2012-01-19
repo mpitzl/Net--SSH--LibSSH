@@ -1,0 +1,17 @@
+TYPEMAP
+u_int			T_UV
+u_char			T_U_CHAR
+
+Net::SSH::LibSSH		*   T_PTROBJ_SPECIAL
+
+INPUT
+T_PTROBJ_SPECIAL
+    if (sv_derived_from($arg, \"Net::SSH::LibSSH\")) {
+	IV tmp = SvIV((SV*)SvRV($arg));
+	$var = INT2PTR($type, tmp);
+    } else
+	croak(\"$var is not of type Net::SSH::LibSSH\");
+
+OUTPUT
+T_PTROBJ_SPECIAL
+    sv_setref_pv($arg, \"Net::SSH::LibSSH\", (void*)$var);
