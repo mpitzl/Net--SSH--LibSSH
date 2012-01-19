@@ -47,10 +47,11 @@ init(is_server, debug, ...)
 	SV **kex_param_val;
 	STRLEN len;
 	char *value_string;
-	int i, log_stderr = 1;
+	int i, ret = 0, log_stderr = 1;
 	SyslogFacility log_facility = SYSLOG_FACILITY_AUTH;
 	LogLevel log_level = SYSLOG_LEVEL_VERBOSE;
 	extern char *__progname;
+	struct ssh *session;
 
     CODE:
 	if (items > 3)
@@ -102,7 +103,12 @@ init(is_server, debug, ...)
 	    log_init(__progname, log_level, log_facility, log_stderr);
 	}
 
-	RETVAL = ssh_init(is_server, &kex_params);
+	if ((ret = ssh_init(&session, is_server, &kex_params)) < 0) {
+	    warn("Error initializing libssh session: %d!", ret);
+	    XSRETURN_UNDEF;
+	}
+
+	RETVAL = session;
 
     OUTPUT:
 	RETVAL
@@ -133,8 +139,17 @@ int
 packet_next(ssh)
     Net::SSH::LibSSH *ssh;
 
+    PREINIT:
+	u_char type;
+	int ret = 0;
+
     CODE:
-	RETVAL = ssh_packet_next(ssh);
+	if((ret =ssh_packet_next(ssh, &type)) < 0) {
+	    warn("Error getting next packet: %d", ret);
+	    XSRETURN_UNDEF;
+	}
+
+	RETVAL = type;
 
     OUTPUT:
 	RETVAL
@@ -152,7 +167,7 @@ packet_payload(ssh)
 	ST(0) = sv_2mortal(newSVpv("", 0));
 	sv_setpvn(ST(0), (char *)data, len);
 
-void
+int
 packet_put(ssh, type, data)
     Net::SSH::LibSSH *ssh;
     int type;
@@ -164,7 +179,10 @@ packet_put(ssh, type, data)
 
     CODE:
 	payload = SvPV(data, len);
-	ssh_packet_put(ssh, type, payload, len);
+	RETVAL = ssh_packet_put(ssh, type, payload, len);
+
+    OUTPUT:
+	RETVAL
 
 int
 input_space(ssh, len)
@@ -177,7 +195,7 @@ input_space(ssh, len)
     OUTPUT:
 	RETVAL
 
-void
+int
 input_append(ssh, data)
     Net::SSH::LibSSH *ssh;
     SV* data;
@@ -188,7 +206,10 @@ input_append(ssh, data)
 
     CODE:
 	append_data = SvPV(data, len);
-	ssh_input_append(ssh, append_data, len);
+	RETVAL = ssh_input_append(ssh, append_data, len);
+
+    OUTPUT:
+	RETVAL
 
 int
 output_space(ssh, len)
@@ -214,10 +235,13 @@ output_ptr(ssh)
 	ST(0) = sv_2mortal(newSVpv("", 0));
 	sv_setpvn(ST(0), (char *)data, len);
 
-void
+int
 output_consume(ssh, len)
     Net::SSH::LibSSH *ssh;
     u_int len;
 
     CODE:
-	ssh_output_consume(ssh, len);
+	RETVAL = ssh_output_consume(ssh, len);
+
+    OUTPUT:
+	RETVAL
