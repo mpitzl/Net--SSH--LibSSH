@@ -66,6 +66,49 @@ use constant {
     SSH2_MSG_KEX_ROAMING_AUTH_FAIL         => 34,
 };
 
+# Constants for error codes returned by various functions
+use constant {
+    SSH_ERR_SUCCESS                   => 0,
+    SSH_ERR_INTERNAL_ERROR            => -1,
+    SSH_ERR_ALLOC_FAIL                => -2,
+    SSH_ERR_MESSAGE_INCOMPLETE        => -3,
+    SSH_ERR_INVALID_FORMAT            => -4,
+    SSH_ERR_BIGNUM_IS_NEGATIVE        => -5,
+    SSH_ERR_BIGNUM_TOO_LARGE          => -6,
+    SSH_ERR_ECPOINT_TOO_LARGE         => -7,
+    SSH_ERR_NO_BUFFER_SPACE           => -8,
+    SSH_ERR_INVALID_ARGUMENT          => -9,
+    SSH_ERR_KEY_BITS_MISMATCH         => -10,
+    SSH_ERR_EC_CURVE_INVALID          => -11,
+    SSH_ERR_KEY_TYPE_MISMATCH         => -12,
+    SSH_ERR_KEY_TYPE_UNKNOWN          => -13,
+    SSH_ERR_EC_CURVE_MISMATCH         => -14,
+    SSH_ERR_EXPECTED_CERT             => -15,
+    SSH_ERR_KEY_LACKS_CERTBLOB        => -16,
+    SSH_ERR_KEY_CERT_UNKNOWN_TYPE     => -17,
+    SSH_ERR_KEY_CERT_INVALID_SIGN_KEY => -18,
+    SSH_ERR_KEY_INVALID_EC_VALUE      => -19,
+    SSH_ERR_SIGNATURE_INVALID         => -20,
+    SSH_ERR_LIBCRYPTO_ERROR           => -21,
+    SSH_ERR_UNEXPECTED_TRAILING_DATA  => -22,
+    SSH_ERR_SYSTEM_ERROR              => -23,
+    SSH_ERR_KEY_CERT_INVALID          => -24,
+    SSH_ERR_AGENT_COMMUNICATION       => -25,
+    SSH_ERR_AGENT_FAILURE             => -26,
+    SSH_ERR_DH_GEX_OUT_OF_RANGE       => -27,
+    SSH_ERR_DISCONNECTED              => -28,
+    SSH_ERR_MAC_INVALID               => -29,
+    SSH_ERR_NO_CIPHER_ALG_MATCH       => -30,
+    SSH_ERR_NO_MAC_ALG_MATCH          => -31,
+    SSH_ERR_NO_COMPRESS_ALG_MATCH     => -32,
+    SSH_ERR_NO_KEX_ALG_MATCH          => -33,
+    SSH_ERR_NO_HOSTKEY_ALG_MATCH      => -34,
+    SSH_ERR_NO_HOSTKEY_LOADED         => -35,
+    SSH_ERR_PROTOCOL_MISMATCH         => -36,
+    SSH_ERR_NO_PROTOCOL_VERSION       => -37,
+    SSH_ERR_NEED_REKEY                => -38,
+};
+
 our @EXPORT = qw(
     SSH2_MSG_DISCONNECT
     SSH2_MSG_IGNORE
@@ -117,9 +160,48 @@ our @EXPORT = qw(
     SSH2_MSG_KEX_ROAMING_AUTH
     SSH2_MSG_KEX_ROAMING_AUTH_OK
     SSH2_MSG_KEX_ROAMING_AUTH_FAIL
+    SSH_ERR_SUCCESS
+    SSH_ERR_INTERNAL_ERROR
+    SSH_ERR_ALLOC_FAIL
+    SSH_ERR_MESSAGE_INCOMPLETE
+    SSH_ERR_INVALID_FORMAT
+    SSH_ERR_BIGNUM_IS_NEGATIVE
+    SSH_ERR_BIGNUM_TOO_LARGE
+    SSH_ERR_ECPOINT_TOO_LARGE
+    SSH_ERR_NO_BUFFER_SPACE
+    SSH_ERR_INVALID_ARGUMENT
+    SSH_ERR_KEY_BITS_MISMATCH
+    SSH_ERR_EC_CURVE_INVALID
+    SSH_ERR_KEY_TYPE_MISMATCH
+    SSH_ERR_KEY_TYPE_UNKNOWN
+    SSH_ERR_EC_CURVE_MISMATCH
+    SSH_ERR_EXPECTED_CERT
+    SSH_ERR_KEY_LACKS_CERTBLOB
+    SSH_ERR_KEY_CERT_UNKNOWN_TYPE
+    SSH_ERR_KEY_CERT_INVALID_SIGN_KEY
+    SSH_ERR_KEY_INVALID_EC_VALUE
+    SSH_ERR_SIGNATURE_INVALID
+    SSH_ERR_LIBCRYPTO_ERROR
+    SSH_ERR_UNEXPECTED_TRAILING_DATA
+    SSH_ERR_SYSTEM_ERROR
+    SSH_ERR_KEY_CERT_INVALID
+    SSH_ERR_AGENT_COMMUNICATION
+    SSH_ERR_AGENT_FAILURE
+    SSH_ERR_DH_GEX_OUT_OF_RANGE
+    SSH_ERR_DISCONNECTED
+    SSH_ERR_MAC_INVALID
+    SSH_ERR_NO_CIPHER_ALG_MATCH
+    SSH_ERR_NO_MAC_ALG_MATCH
+    SSH_ERR_NO_COMPRESS_ALG_MATCH
+    SSH_ERR_NO_KEX_ALG_MATCH
+    SSH_ERR_NO_HOSTKEY_ALG_MATCH
+    SSH_ERR_NO_HOSTKEY_LOADED
+    SSH_ERR_PROTOCOL_MISMATCH
+    SSH_ERR_NO_PROTOCOL_VERSION
+    SSH_ERR_NEED_REKEY
 );
 
-our $VERSION = '0.01';
+our $VERSION = '0.02';
 
 require XSLoader;
 XSLoader::load('Net::SSH::LibSSH', $VERSION);
@@ -164,24 +246,33 @@ Version 0.01
   ) or die "Error creating new Net::SSH::LibSSH object!";
 
   # Add a host key. Server needs a private, client a public key
-  $ssh->add_hostkey($key_data)
-      or die "Invalid host key given!";
+  my $ret = $ssh->add_hostkey($key_data);
+  if ($ret != SSH_ERR_SUCCESS)
+      die "Error adding host key: $!";
 
   # Data read on fd must be added to the internal input buffer
-  $ssh->input_append($data);
+  $ret = $ssh->input_append($data);
+  if ($ret != SSH_ERR_SUCCESS)
+      die "Error appending input data: $ret";
 
   # Get a SSH packet, returns 0 if no packet could be read
   # First call initiates banner exchange and key exchange which sets up the
   # encryption on transport layer level
   my $type = $ssh->packet_next();
-  if ($type) {
-      ...
+  if ($type > 0) {
+      # Read payload
+      my $data = $ssh->packet_payload()
+          or die "Error reading packet payload!";
+  } elsif ($type < 0)
+      die "Error reading next packet: $type";
   } else {
       # read more data
   }
 
   # Put packet into output buffer
-  $ssh->packet_put($type, $data);
+  $ret = $ssh->packet_put($type, $data);
+  if ($ret != SSH_ERR_SUCCESS)
+      die "Error adding new packet: $ret";
 
   # Write data if any
   if(my $olen = $ssh->can_write()) {
@@ -260,23 +351,24 @@ Valid parameter names are:
 Takes a string containing either a private or public key and tries to load it
 into the Net::SSH::LibSSH object.
 
-Returns 1 on success, 0 on failure.
+Returns SSH_ERR_SUCCESS on success, otherwise a negative error code is returned.
 
 =item packet_next()
 
 This returns the type of the next packet which could be parsed from the input
-buffer. If there was no packet or an incomplete packet, 0 is returned.
+buffer. If there was no packet or an incomplete packet, 0 is returned. If there
+was an error a negative error code is returned.
 
 =item packet_payload()
 
 Must be called after packet_next to get the payload of the available packet.
 
-Returns the payload.
+Returns the payload or undef on error.
 
 =item packet_put($type, $data)
 
 Adds a packet of type $type with the payload $data to the internal output
-buffer.
+buffer. Returns SSH_ERR_SUCCESS on success, otherwise a negative error code.
 
 =item input_space($len)
 
@@ -284,12 +376,12 @@ Checks if there is enough input buffer space for $len bytes of data.
 
 =item input_append($data)
 
-Appends $data to the input buffer.
+Appends $data to the input buffer. In case of an error a negative value is
+returned.
 
 =item output_space($len)
 
 Checks if there is enough output buffer space for $len bytes of data.
-
 
 =item output_ptr()
 
@@ -297,7 +389,8 @@ Returns the contents of the output buffer.
 
 =item output_consume($len)
 
-Removes $len bytes from the output buffer.
+Removes $len bytes from the output buffer. Returns SSH_ERR_SUCCESS on success
+otherwise a negative error code is returned.
 
 =item can_write()
 

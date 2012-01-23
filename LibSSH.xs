@@ -129,8 +129,7 @@ add_hostkey(ssh, key)
 	int ret;
 
     CODE:
-	ret = ssh_add_hostkey(ssh, key);
-	RETVAL = (ret == 0);
+	RETVAL = ssh_add_hostkey(ssh, key);
 
     OUTPUT:
 	RETVAL
@@ -144,12 +143,10 @@ packet_next(ssh)
 	int ret = 0;
 
     CODE:
-	if((ret =ssh_packet_next(ssh, &type)) < 0) {
-	    warn("Error getting next packet: %d", ret);
-	    XSRETURN_UNDEF;
-	}
-
-	RETVAL = type;
+	if((ret = ssh_packet_next(ssh, &type)) < 0)
+	    RETVAL = ret;
+	else
+	    RETVAL = type;
 
     OUTPUT:
 	RETVAL
@@ -164,6 +161,10 @@ packet_payload(ssh)
 
     CODE:
 	data = ssh_packet_payload(ssh, &len);
+
+	if (len == 0 || data == NULL)
+	    XSRETURN_UNDEF;
+
 	ST(0) = sv_2mortal(newSVpv("", 0));
 	sv_setpvn(ST(0), (char *)data, len);
 
@@ -232,6 +233,9 @@ output_ptr(ssh)
 
     CODE:
 	data = ssh_output_ptr(ssh, &len);
+	if (len == 0 || data == NULL)
+	    XSRETURN_UNDEF;
+
 	ST(0) = sv_2mortal(newSVpv("", 0));
 	sv_setpvn(ST(0), (char *)data, len);
 
