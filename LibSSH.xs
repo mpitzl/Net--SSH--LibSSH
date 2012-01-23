@@ -162,7 +162,7 @@ packet_payload(ssh)
     CODE:
 	data = ssh_packet_payload(ssh, &len);
 
-	if (len == 0 || data == NULL)
+	if (data == NULL)
 	    XSRETURN_UNDEF;
 
 	ST(0) = sv_2mortal(newSVpv("", 0));
@@ -233,7 +233,7 @@ output_ptr(ssh)
 
     CODE:
 	data = ssh_output_ptr(ssh, &len);
-	if (len == 0 || data == NULL)
+	if (data == NULL)
 	    XSRETURN_UNDEF;
 
 	ST(0) = sv_2mortal(newSVpv("", 0));
