@@ -13,6 +13,7 @@
 #include <kex.h>
 #include <ssh_api.h>
 #include <myproposal.h>
+#include <err.h>
 
 /* For debugging purposes */
 #include <log.h>
@@ -249,3 +250,15 @@ output_consume(ssh, len)
 
     OUTPUT:
 	RETVAL
+
+SV*
+error_string(ssh, n)
+    Net::SSH::LibSSH *ssh;
+    int n;
+
+    INIT:
+	const char *errstr;
+
+    CODE:
+	errstr = ssh_err(n);
+	ST(0) = sv_2mortal(newSVpv(errstr, 0));

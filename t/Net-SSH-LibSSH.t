@@ -8,7 +8,7 @@
 use strict;
 use warnings;
 
-use Test::More tests => 2;
+use Test::More tests => 5;
 BEGIN { use_ok('Net::SSH::LibSSH') };
 
 # Create new object
@@ -17,3 +17,13 @@ my $ssh = Net::SSH::LibSSH->new(
     debug  => 0,
 );
 isa_ok($ssh, 'Net::SSH::LibSSH');
+
+is($ssh->error_string(0), 'success', 'Check error string for SSH_ERR_SUCCESS');
+is($ssh->error_string(-38),
+    'rekeying not supported by peer',
+    'Check error string for SSH_ERR_NEED_REKEY'
+);
+is($ssh->error_string(-39),
+    'unknown error',
+    'Check error string for unknown error code'
+);

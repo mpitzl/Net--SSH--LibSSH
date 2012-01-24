@@ -397,6 +397,10 @@ otherwise a negative error code is returned.
 Returns the number of bytes in the output buffer which must be sent over the
 network.
 
+=item error_string($errno)
+
+Returns a string describing the error code given.
+
 =back
 
 =head2 EXPORT
