@@ -252,8 +252,7 @@ output_consume(ssh, len)
 	RETVAL
 
 SV*
-error_string(ssh, n)
-    Net::SSH::LibSSH *ssh;
+_error_string(n)
     int n;
 
     INIT:
