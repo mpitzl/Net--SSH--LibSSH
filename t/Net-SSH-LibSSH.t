@@ -8,7 +8,7 @@
 use strict;
 use warnings;
 
-use Test::More tests => 5;
+use Test::More tests => 6;
 BEGIN { use_ok('Net::SSH::LibSSH') };
 
 # Create new object
@@ -27,3 +27,5 @@ is($ssh->error_string(-39),
     'unknown error',
     'Check error string for unknown error code'
 );
+
+is(Net::SSH::LibSSH->error_string(0), 'success', 'Check error string for SSH_ERR_SUCCESS');

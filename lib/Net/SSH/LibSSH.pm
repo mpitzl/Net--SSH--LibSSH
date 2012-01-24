@@ -201,6 +201,10 @@ our @EXPORT = qw(
     SSH_ERR_NEED_REKEY
 );
 
+our @EXPORT_OK = qw(
+    error_string
+);
+
 our $VERSION = '0.02';
 
 require XSLoader;
@@ -218,6 +222,12 @@ sub new {
 
 sub can_write {
     return length($_[0]->output_ptr());
+}
+
+sub error_string {
+    return Net::SSH::LibSSH::_error_string($_[0]) if (@_ == 1);
+    return Net::SSH::LibSSH::_error_string($_[1]) if (defined $_[1]);
+    return undef;
 }
 
 sub DESTROY {
@@ -239,7 +249,7 @@ Version 0.02
 
 =head1 SYNOPSIS
 
-  use Net::SSH::LibSSH;
+  use Net::SSH::LibSSH qw(error_string);
   my $ssh = Net::SSH::LibSSH->new(
     server => 1,
     debug  => 0,
@@ -248,12 +258,12 @@ Version 0.02
   # Add a host key. Server needs a private, client a public key
   my $ret = $ssh->add_hostkey($key_data);
   if ($ret != SSH_ERR_SUCCESS)
-      die "Error adding host key: $!";
+      die "Error adding host key: " . error_string($ret) . "\n";
 
   # Data read on fd must be added to the internal input buffer
   $ret = $ssh->input_append($data);
   if ($ret != SSH_ERR_SUCCESS)
-      die "Error appending input data: $ret";
+      die "Error appending input data: " . error_string($ret) . "\n";
 
   # Get a SSH packet, returns 0 if no packet could be read
   # First call initiates banner exchange and key exchange which sets up the
@@ -264,7 +274,7 @@ Version 0.02
       my $data = $ssh->packet_payload()
           or die "Error reading packet payload!";
   } elsif ($type < 0)
-      die "Error reading next packet: $type";
+      die "Error reading next packet: " . error_string($type) . "\n";
   } else {
       # read more data
   }
@@ -272,7 +282,7 @@ Version 0.02
   # Put packet into output buffer
   $ret = $ssh->packet_put($type, $data);
   if ($ret != SSH_ERR_SUCCESS)
-      die "Error adding new packet: $ret";
+      die "Error adding new packet: " . error_string($ret) . "\n";
 
   # Write data if any
   if(my $olen = $ssh->can_write()) {
@@ -399,7 +409,8 @@ network.
 
 =item error_string($errno)
 
-Returns a string describing the error code given.
+Returns a string describing the error code given. Can be either called as method
+of the class or imported by C<use Net::SSH::LibSSH qw(error_string);>.
 
 =back
 
