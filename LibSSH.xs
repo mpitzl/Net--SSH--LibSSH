@@ -37,6 +37,8 @@ static char *kex_param_keys[PROPOSAL_MAX] = {
 
 MODULE = Net::SSH::LibSSH		PACKAGE = Net::SSH::LibSSH
 
+PROTOTYPES: DISABLE
+
 Net::SSH::LibSSH*
 init(is_server, debug, ...)
     int is_server;

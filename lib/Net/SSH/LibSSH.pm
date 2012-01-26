@@ -3,6 +3,7 @@ package Net::SSH::LibSSH;
 use 5.012002;
 use strict;
 use warnings;
+use Scalar::Util qw(looks_like_number);
 
 require Exporter;
 
@@ -225,9 +226,20 @@ sub can_write {
 }
 
 sub error_string {
-    return Net::SSH::LibSSH::_error_string($_[0]) if (@_ == 1);
-    return Net::SSH::LibSSH::_error_string($_[1]) if (defined $_[1]);
-    return undef;
+    if (@_ == 1) {
+	if (looks_like_number($_[0])) {
+	    return Net::SSH::LibSSH::_error_string($_[0]);
+	} else {
+	    die "First argument must be a number!";
+	}
+    } elsif (@_ == 2) {
+	if (looks_like_number($_[1])) {
+	    return Net::SSH::LibSSH::_error_string($_[1]);
+	} else {
+	    die "Second argument must be a number!";
+	}
+    }
+    die "Usage: \$obj->error_string(\$n) or error_string(\$n)!";
 }
 
 sub DESTROY {
