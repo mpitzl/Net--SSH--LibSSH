@@ -13,6 +13,8 @@
 #include <kex.h>
 #include <ssh_api.h>
 #include <myproposal.h>
+
+/* Include err.h from libopenssh sources */
 #include <err.h>
 
 /* For debugging purposes */

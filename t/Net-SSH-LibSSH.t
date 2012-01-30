@@ -8,8 +8,8 @@
 use strict;
 use warnings;
 
-use Test::More tests => 6;
-BEGIN { use_ok('Net::SSH::LibSSH') };
+use Test::More tests => 9;
+BEGIN { use_ok('Net::SSH::LibSSH', qw(error_string)) };
 
 # Create new object
 my $ssh = Net::SSH::LibSSH->new(
@@ -18,6 +18,7 @@ my $ssh = Net::SSH::LibSSH->new(
 );
 isa_ok($ssh, 'Net::SSH::LibSSH');
 
+can_ok($ssh, 'error_string');
 is($ssh->error_string(0), 'success', 'Check error string for SSH_ERR_SUCCESS');
 is($ssh->error_string(-38),
     'rekeying not supported by peer',
@@ -28,4 +29,10 @@ is($ssh->error_string(-39),
     'Check error string for unknown error code'
 );
 
-is(Net::SSH::LibSSH->error_string(0), 'success', 'Check error string for SSH_ERR_SUCCESS');
+is(error_string(0),
+    'success', 'Check error string for SSH_ERR_SUCCESS');
+eval {Net::SSH::LibSSH->error_string()};
+ok($@, "Calling error_string() without argument dies: $@");
+
+eval {Net::SSH::LibSSH->error_string('lalala')};
+ok($@, "Calling error_string() with string dies: $@");
