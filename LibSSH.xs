@@ -37,6 +37,90 @@ static char *kex_param_keys[PROPOSAL_MAX] = {
     "PROPOSAL_LANG_STOC"
 };
 
+/* Place to store a callback function for the host key verification */
+static SV *verify_host_key_cb = NULL;
+
+/*
+ * Convert the given sshkey struct into PEM format. Code derived from
+ * sshkey_write() in key.c.
+ */
+static SV*
+_convert_sshkey_to_pem(struct sshkey *key) {
+    struct sshbuf *b = NULL, *bb = NULL;
+    char *uu = NULL;
+    SV *key_pem = sv_2mortal(newSVpvn("", 0));
+
+    if ((b = sshbuf_new()) == NULL)
+	goto out;
+
+    if ((bb = sshbuf_new()) == NULL)
+	goto out;
+
+    if (sshkey_to_blob_buf(key, bb) != 0)
+	goto out;
+
+    if ((uu = sshbuf_dtob64(bb)) == NULL)
+	goto out;
+
+    if (sshbuf_putf(b, "%s ", sshkey_ssh_name(key)) != 0)
+	goto out;
+
+    if (sshbuf_put(b, uu, strlen(uu)) != 0)
+	goto out;
+
+    sv_setpvn(key_pem, sshbuf_ptr(b), sshbuf_len(b));
+
+out:
+    if (b != NULL)
+	sshbuf_free(b);
+
+    if (bb != NULL)
+	sshbuf_free(bb);
+
+    if (uu != NULL)
+	free(uu);
+
+    return key_pem;
+}
+
+/*
+ * This function is the callback to be registered in libopenssh to perform the
+ * host key verification. It then calls the perl callback sub.
+ * It gets called with a key and the ssh context.
+ * The key is passed as struct sshkey which must be converted into PEM format
+ * before it gets passed to the perl callback sub.
+ */
+static int
+_exec_callback(struct sshkey *key, struct ssh *ssh) {
+    dSP;
+    int ret = 0, count = 0;
+    SV *sshkey_converted;
+
+    PUSHMARK(SP);
+
+    /* Convert the given key into PEM format */
+    sshkey_converted = _convert_sshkey_to_pem(key);
+
+    if (SvLEN(sshkey_converted) == 0)
+	croak("Error converting SSH key into PEM format!");
+
+    /* Push the converted key onto perl's stack */
+    XPUSHs(sshkey_converted);
+    PUTBACK;
+
+    count = call_sv(verify_host_key_cb, G_SCALAR);
+
+    SPAGAIN;
+
+    if (count != 1)
+	croak("Host key verification callback must return a scalar!");
+
+    PUTBACK; /* XXX Really needed? */
+
+    ret = POPi;
+    return (ret > 0 ? 0 : -1);
+}
+
 MODULE = Net::SSH::LibSSH		PACKAGE = Net::SSH::LibSSH
 
 PROTOTYPES: DISABLE
@@ -265,3 +349,16 @@ _error_string(n)
     CODE:
 	errstr = ssh_err(n);
 	ST(0) = sv_2mortal(newSVpv(errstr, 0));
+
+void
+set_verify_host_key_callback(ssh, cb)
+    Net::SSH::LibSSH *ssh;
+    SV *cb;
+
+    CODE:
+	if (verify_host_key_cb == NULL)
+	    verify_host_key_cb = newSVsv(cb);
+	else
+	    SvSetSV(verify_host_key_cb, cb);
+
+	ssh_set_verify_host_key_callback(ssh, _exec_callback);

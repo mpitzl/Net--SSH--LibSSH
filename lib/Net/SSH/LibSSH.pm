@@ -425,6 +425,12 @@ network.
 Returns a string describing the error code given. Can be either called as method
 of the class or imported by C<use Net::SSH::LibSSH qw(error_string);>.
 
+=item set_verify_host_key_callback($coderef)
+
+Installs the given $coderef as new custom host key verification handler. Gets
+called from libssh. The callback function given gets the host key in PEM format
+and must return 0 on positive key verification or -1 otherwise.
+
 =back
 
 =head2 EXPORT
