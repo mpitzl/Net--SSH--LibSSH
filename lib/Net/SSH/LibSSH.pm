@@ -10,10 +10,6 @@ require Exporter;
 
 our @ISA = qw(Exporter);
 
-# Items to export into callers namespace by default. Note: do not export
-# names by default without a very good reason. Use EXPORT_OK instead.
-# Do not simply export all your public functions/methods/constants.
-
 # Constants for the SSH packet types, taken from ssh2.h
 use constant {
     SSH2_MSG_DISCONNECT                    => 1,
@@ -111,7 +107,7 @@ use constant {
     SSH_ERR_NEED_REKEY                => -38,
 };
 
-our @EXPORT = qw(
+my @SSH_MSG = qw(
     SSH2_MSG_DISCONNECT
     SSH2_MSG_IGNORE
     SSH2_MSG_UNIMPLEMENTED
@@ -162,6 +158,8 @@ our @EXPORT = qw(
     SSH2_MSG_KEX_ROAMING_AUTH
     SSH2_MSG_KEX_ROAMING_AUTH_OK
     SSH2_MSG_KEX_ROAMING_AUTH_FAIL
+);
+my @SSH_ERR = qw(
     SSH_ERR_SUCCESS
     SSH_ERR_INTERNAL_ERROR
     SSH_ERR_ALLOC_FAIL
@@ -202,10 +200,23 @@ our @EXPORT = qw(
     SSH_ERR_NO_PROTOCOL_VERSION
     SSH_ERR_NEED_REKEY
 );
-
-our @EXPORT_OK = qw(
+my @SSH_FUNC = qw (
     error_string
 );
+our @EXPORT_OK = (
+    @SSH_MSG,
+    @SSH_ERR,
+    @SSH_FUNC
+);
+
+our %EXPORT_TAGS = (
+    all => [@SSH_MSG, @SSH_ERR, @SSH_FUNC],
+    functions => [@SSH_FUNC],
+    errno => [@SSH_ERR],
+    msgno => [@SSH_MSG]
+);
+
+Exporter::export_ok_tags("all", "functions", "errno", "msgno");
 
 our $VERSION = '0.02';
 
@@ -262,7 +273,7 @@ Version 0.02
 
 =head1 SYNOPSIS
 
-  use Net::SSH::LibSSH qw(error_string);
+  use Net::SSH::LibSSH qw(:all);
   my $ssh = Net::SSH::LibSSH->new(
     server => 1,
     debug  => 0,
@@ -298,9 +309,8 @@ Version 0.02
       die "Error adding new packet: " . error_string($ret) . "\n";
 
   # Write data if any
-  if(my $olen = $ssh->can_write()) {
+  if (my $olen = $ssh->can_write())
       # write $olen bytes of data to socket
-  }
 
 =head1 DESCRIPTION
 
@@ -412,7 +422,7 @@ Returns the contents of the output buffer.
 
 =item output_consume($len)
 
-Removes $len bytes from the output buffer. Returns SSH_ERR_SUCCESS on success
+Removes $len bytes from the output buffer. Returns SSH_ERR_SUCCESS on success,
 otherwise a negative error code is returned.
 
 =item can_write()
@@ -435,8 +445,110 @@ and must return 0 on positive key verification or -1 otherwise.
 
 =head2 EXPORT
 
-Exports all the SSH2 message types as constants:
-SH2_MSG_IGNORE, SSH2_MSG_USERAUTH_REQUEST, SSH2_MSG_CHANNEL_OPEN, ...
+Nothing by default.
+
+The following tags are supported:
+
+    :all
+    :functions - what you could call without a LibSSH object
+    :errno - constants for errors from ssh2.h
+    :msgno - constants for messages from ssh2.h
+
+The only function where it makes sense to call it without a LibSSH object is
+currently C<error_string>.
+
+The message constants are:
+SSH2_MSG_DISCONNECT
+SSH2_MSG_IGNORE
+SSH2_MSG_UNIMPLEMENTED
+SSH2_MSG_DEBUG
+SSH2_MSG_SERVICE_REQUEST
+SSH2_MSG_SERVICE_ACCEPT
+SSH2_MSG_KEXINIT
+SSH2_MSG_NEWKEYS
+SSH2_MSG_KEXDH_INIT
+SSH2_MSG_KEXDH_REPLY
+SSH2_MSG_KEX_DH_GEX_REQUEST_OLD
+SSH2_MSG_KEX_DH_GEX_GROUP
+SSH2_MSG_KEX_DH_GEX_INIT
+SSH2_MSG_KEX_DH_GEX_REPLY
+SSH2_MSG_KEX_DH_GEX_REQUEST
+SSH2_MSG_KEX_ECDH_INIT
+SSH2_MSG_KEX_ECDH_REPLY
+SSH2_MSG_USERAUTH_REQUEST
+SSH2_MSG_USERAUTH_FAILURE
+SSH2_MSG_USERAUTH_SUCCESS
+SSH2_MSG_USERAUTH_BANNER
+SSH2_MSG_USERAUTH_PK_OK
+SSH2_MSG_USERAUTH_PASSWD_CHANGEREQ
+SSH2_MSG_USERAUTH_INFO_REQUEST
+SSH2_MSG_USERAUTH_INFO_RESPONSE
+SSH2_MSG_USERAUTH_JPAKE_CLIENT_STEP1
+SSH2_MSG_USERAUTH_JPAKE_SERVER_STEP1
+SSH2_MSG_USERAUTH_JPAKE_CLIENT_STEP2
+SSH2_MSG_USERAUTH_JPAKE_SERVER_STEP2
+SSH2_MSG_USERAUTH_JPAKE_CLIENT_CONFIRM
+SSH2_MSG_USERAUTH_JPAKE_SERVER_CONFIRM
+SSH2_MSG_GLOBAL_REQUEST
+SSH2_MSG_REQUEST_SUCCESS
+SSH2_MSG_REQUEST_FAILURE
+SSH2_MSG_CHANNEL_OPEN
+SSH2_MSG_CHANNEL_OPEN_CONFIRMATION
+SSH2_MSG_CHANNEL_OPEN_FAILURE
+SSH2_MSG_CHANNEL_WINDOW_ADJUST
+SSH2_MSG_CHANNEL_DATA
+SSH2_MSG_CHANNEL_EXTENDED_DATA
+SSH2_MSG_CHANNEL_EOF
+SSH2_MSG_CHANNEL_CLOSE
+SSH2_MSG_CHANNEL_REQUEST
+SSH2_MSG_CHANNEL_SUCCESS
+SSH2_MSG_CHANNEL_FAILURE
+SSH2_MSG_KEX_ROAMING_RESUME
+SSH2_MSG_KEX_ROAMING_AUTH_REQUIRED
+SSH2_MSG_KEX_ROAMING_AUTH
+SSH2_MSG_KEX_ROAMING_AUTH_OK
+SSH2_MSG_KEX_ROAMING_AUTH_FAIL
+
+The error constants are:
+SSH_ERR_SUCCESS
+SSH_ERR_INTERNAL_ERROR
+SSH_ERR_ALLOC_FAIL
+SSH_ERR_MESSAGE_INCOMPLETE
+SSH_ERR_INVALID_FORMAT
+SSH_ERR_BIGNUM_IS_NEGATIVE
+SSH_ERR_BIGNUM_TOO_LARGE
+SSH_ERR_ECPOINT_TOO_LARGE
+SSH_ERR_NO_BUFFER_SPACE
+SSH_ERR_INVALID_ARGUMENT
+SSH_ERR_KEY_BITS_MISMATCH
+SSH_ERR_EC_CURVE_INVALID
+SSH_ERR_KEY_TYPE_MISMATCH
+SSH_ERR_KEY_TYPE_UNKNOWN
+SSH_ERR_EC_CURVE_MISMATCH
+SSH_ERR_EXPECTED_CERT
+SSH_ERR_KEY_LACKS_CERTBLOB
+SSH_ERR_KEY_CERT_UNKNOWN_TYPE
+SSH_ERR_KEY_CERT_INVALID_SIGN_KEY
+SSH_ERR_KEY_INVALID_EC_VALUE
+SSH_ERR_SIGNATURE_INVALID
+SSH_ERR_LIBCRYPTO_ERROR
+SSH_ERR_UNEXPECTED_TRAILING_DATA
+SSH_ERR_SYSTEM_ERROR
+SSH_ERR_KEY_CERT_INVALID
+SSH_ERR_AGENT_COMMUNICATION
+SSH_ERR_AGENT_FAILURE
+SSH_ERR_DH_GEX_OUT_OF_RANGE
+SSH_ERR_DISCONNECTED
+SSH_ERR_MAC_INVALID
+SSH_ERR_NO_CIPHER_ALG_MATCH
+SSH_ERR_NO_MAC_ALG_MATCH
+SSH_ERR_NO_COMPRESS_ALG_MATCH
+SSH_ERR_NO_KEX_ALG_MATCH
+SSH_ERR_NO_HOSTKEY_ALG_MATCH
+SSH_ERR_NO_HOSTKEY_LOADED
+SSH_ERR_PROTOCOL_MISMATCH
+SSH_ERR_NO_PROTOCOL_VERSION
+SSH_ERR_NEED_REKEY
 
 =head1 AUTHOR
 
