@@ -9,6 +9,7 @@
 /* Include stuff of OpenSSH */
 #include <buffer.h>
 #include <cipher.h>
+#include <authfile.h>
 #include <key.h>
 #include <kex.h>
 #include <ssh_api.h>
@@ -39,6 +40,49 @@ static char *kex_param_keys[PROPOSAL_MAX] = {
 
 /* Place to store a callback function for the host key verification */
 static SV *verify_host_key_cb = NULL;
+
+/*
+ * Parse a given key string in PEM format and store it into the passed struct
+ * sshkey. Returns 0 on success, otherwise an error code.
+ */
+int
+_convert_pem_to_sshkey(struct ssh *ssh, char *key, struct sshkey **sshkey) {
+    struct sshkey *parsed_key = NULL;
+    struct sshbuf *key_buf = NULL;
+    int ret = SSH_ERR_SUCCESS;
+
+    if (ssh->kex->server) {
+	/* Parse private key */
+	if ((key_buf = sshbuf_new()) == NULL)
+	    return SSH_ERR_ALLOC_FAIL;
+
+	if ((ret = sshbuf_put(key_buf, key, strlen(key))) != 0)
+	    goto out;
+
+	if ((*sshkey = key_parse_private(key_buf, "hostkey", "",
+	    NULL)) == NULL) {
+	    ret = SSH_ERR_INVALID_FORMAT;
+	    goto out;
+	}
+    } else {
+	/* Parse public key */
+	if ((*sshkey = sshkey_new(KEY_UNSPEC)) == NULL)
+	    return SSH_ERR_ALLOC_FAIL;
+
+	if ((ret = sshkey_read(*sshkey, &key)) != 0)
+	    goto out;
+    }
+
+out:
+    if (key_buf)
+	sshbuf_free(key_buf);
+
+    if (ret != 0)
+	if (parsed_key)
+	    sshkey_free(parsed_key);
+
+    return ret;
+}
 
 /*
  * Convert the given sshkey struct into PEM format. Code derived from
@@ -136,7 +180,7 @@ init(is_server, debug, ...)
 	SV **kex_param_val;
 	STRLEN len;
 	char *value_string;
-	int i, ret = 0, log_stderr = 1;
+	int i, ret = SSH_ERR_SUCCESS, log_stderr = 1;
 	SyslogFacility log_facility = SYSLOG_FACILITY_AUTH;
 	LogLevel log_level = SYSLOG_LEVEL_VERBOSE;
 	extern char *__progname;
@@ -215,10 +259,24 @@ add_hostkey(ssh, key)
     char *key;
 
     INIT:
-	int ret;
+	int ret = SSH_ERR_SUCCESS;
+	struct sshkey *sshkey = NULL;
 
     CODE:
-	RETVAL = ssh_add_hostkey(ssh, key);
+	/*
+	 * Key is a string and needs to be parsed into an sshkey struct before
+	 * passing it to ssh_add_hostkey()
+	 */
+	ret = _convert_pem_to_sshkey(ssh, key, &sshkey);
+
+	if (ret < 0) {
+	    if (sshkey)
+		sshkey_free(sshkey);
+	} else {
+	    ret = ssh_add_hostkey(ssh, sshkey);
+	}
+
+	RETVAL = ret;
 
     OUTPUT:
 	RETVAL
@@ -227,9 +285,9 @@ int
 packet_next(ssh)
     Net::SSH::LibSSH *ssh;
 
-    PREINIT:
+    INIT:
 	u_char type;
-	int ret = 0;
+	int ret;
 
     CODE:
 	if((ret = ssh_packet_next(ssh, &type)) < 0)
