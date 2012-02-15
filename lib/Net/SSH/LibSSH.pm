@@ -63,6 +63,58 @@ use constant {
     SSH2_MSG_KEX_ROAMING_AUTH_OK           => 33,
     SSH2_MSG_KEX_ROAMING_AUTH_FAIL         => 34,
 };
+my %SSH_MSG = reverse (
+    SSH2_MSG_DISCONNECT                    => 1,
+    SSH2_MSG_IGNORE                        => 2,
+    SSH2_MSG_UNIMPLEMENTED                 => 3,
+    SSH2_MSG_DEBUG                         => 4,
+    SSH2_MSG_SERVICE_REQUEST               => 5,
+    SSH2_MSG_SERVICE_ACCEPT                => 6,
+    SSH2_MSG_KEXINIT                       => 20,
+    SSH2_MSG_NEWKEYS                       => 21,
+    SSH2_MSG_KEXDH_INIT                    => 30,
+    SSH2_MSG_KEXDH_REPLY                   => 31,
+    SSH2_MSG_KEX_DH_GEX_REQUEST_OLD        => 30,
+    SSH2_MSG_KEX_DH_GEX_GROUP              => 31,
+    SSH2_MSG_KEX_DH_GEX_INIT               => 32,
+    SSH2_MSG_KEX_DH_GEX_REPLY              => 33,
+    SSH2_MSG_KEX_DH_GEX_REQUEST            => 34,
+    SSH2_MSG_KEX_ECDH_INIT                 => 30,
+    SSH2_MSG_KEX_ECDH_REPLY                => 31,
+    SSH2_MSG_USERAUTH_REQUEST              => 50,
+    SSH2_MSG_USERAUTH_FAILURE              => 51,
+    SSH2_MSG_USERAUTH_SUCCESS              => 52,
+    SSH2_MSG_USERAUTH_BANNER               => 53,
+    SSH2_MSG_USERAUTH_PK_OK                => 60,
+    SSH2_MSG_USERAUTH_PASSWD_CHANGEREQ     => 60,
+    SSH2_MSG_USERAUTH_INFO_REQUEST         => 60,
+    SSH2_MSG_USERAUTH_INFO_RESPONSE        => 61,
+    SSH2_MSG_USERAUTH_JPAKE_CLIENT_STEP1   => 60,
+    SSH2_MSG_USERAUTH_JPAKE_SERVER_STEP1   => 61,
+    SSH2_MSG_USERAUTH_JPAKE_CLIENT_STEP2   => 62,
+    SSH2_MSG_USERAUTH_JPAKE_SERVER_STEP2   => 63,
+    SSH2_MSG_USERAUTH_JPAKE_CLIENT_CONFIRM => 64,
+    SSH2_MSG_USERAUTH_JPAKE_SERVER_CONFIRM => 65,
+    SSH2_MSG_GLOBAL_REQUEST                => 80,
+    SSH2_MSG_REQUEST_SUCCESS               => 81,
+    SSH2_MSG_REQUEST_FAILURE               => 82,
+    SSH2_MSG_CHANNEL_OPEN                  => 90,
+    SSH2_MSG_CHANNEL_OPEN_CONFIRMATION     => 91,
+    SSH2_MSG_CHANNEL_OPEN_FAILURE          => 92,
+    SSH2_MSG_CHANNEL_WINDOW_ADJUST         => 93,
+    SSH2_MSG_CHANNEL_DATA                  => 94,
+    SSH2_MSG_CHANNEL_EXTENDED_DATA         => 95,
+    SSH2_MSG_CHANNEL_EOF                   => 96,
+    SSH2_MSG_CHANNEL_CLOSE                 => 97,
+    SSH2_MSG_CHANNEL_REQUEST               => 98,
+    SSH2_MSG_CHANNEL_SUCCESS               => 99,
+    SSH2_MSG_CHANNEL_FAILURE               => 100,
+    SSH2_MSG_KEX_ROAMING_RESUME            => 30,
+    SSH2_MSG_KEX_ROAMING_AUTH_REQUIRED     => 31,
+    SSH2_MSG_KEX_ROAMING_AUTH              => 32,
+    SSH2_MSG_KEX_ROAMING_AUTH_OK           => 33,
+    SSH2_MSG_KEX_ROAMING_AUTH_FAIL         => 34,
+);
 
 # Constants for error codes returned by various functions
 use constant {
@@ -106,114 +158,62 @@ use constant {
     SSH_ERR_NO_PROTOCOL_VERSION       => -37,
     SSH_ERR_NEED_REKEY                => -38,
 };
-
-my @SSH_MSG = qw(
-    SSH2_MSG_DISCONNECT
-    SSH2_MSG_IGNORE
-    SSH2_MSG_UNIMPLEMENTED
-    SSH2_MSG_DEBUG
-    SSH2_MSG_SERVICE_REQUEST
-    SSH2_MSG_SERVICE_ACCEPT
-    SSH2_MSG_KEXINIT
-    SSH2_MSG_NEWKEYS
-    SSH2_MSG_KEXDH_INIT
-    SSH2_MSG_KEXDH_REPLY
-    SSH2_MSG_KEX_DH_GEX_REQUEST_OLD
-    SSH2_MSG_KEX_DH_GEX_GROUP
-    SSH2_MSG_KEX_DH_GEX_INIT
-    SSH2_MSG_KEX_DH_GEX_REPLY
-    SSH2_MSG_KEX_DH_GEX_REQUEST
-    SSH2_MSG_KEX_ECDH_INIT
-    SSH2_MSG_KEX_ECDH_REPLY
-    SSH2_MSG_USERAUTH_REQUEST
-    SSH2_MSG_USERAUTH_FAILURE
-    SSH2_MSG_USERAUTH_SUCCESS
-    SSH2_MSG_USERAUTH_BANNER
-    SSH2_MSG_USERAUTH_PK_OK
-    SSH2_MSG_USERAUTH_PASSWD_CHANGEREQ
-    SSH2_MSG_USERAUTH_INFO_REQUEST
-    SSH2_MSG_USERAUTH_INFO_RESPONSE
-    SSH2_MSG_USERAUTH_JPAKE_CLIENT_STEP1
-    SSH2_MSG_USERAUTH_JPAKE_SERVER_STEP1
-    SSH2_MSG_USERAUTH_JPAKE_CLIENT_STEP2
-    SSH2_MSG_USERAUTH_JPAKE_SERVER_STEP2
-    SSH2_MSG_USERAUTH_JPAKE_CLIENT_CONFIRM
-    SSH2_MSG_USERAUTH_JPAKE_SERVER_CONFIRM
-    SSH2_MSG_GLOBAL_REQUEST
-    SSH2_MSG_REQUEST_SUCCESS
-    SSH2_MSG_REQUEST_FAILURE
-    SSH2_MSG_CHANNEL_OPEN
-    SSH2_MSG_CHANNEL_OPEN_CONFIRMATION
-    SSH2_MSG_CHANNEL_OPEN_FAILURE
-    SSH2_MSG_CHANNEL_WINDOW_ADJUST
-    SSH2_MSG_CHANNEL_DATA
-    SSH2_MSG_CHANNEL_EXTENDED_DATA
-    SSH2_MSG_CHANNEL_EOF
-    SSH2_MSG_CHANNEL_CLOSE
-    SSH2_MSG_CHANNEL_REQUEST
-    SSH2_MSG_CHANNEL_SUCCESS
-    SSH2_MSG_CHANNEL_FAILURE
-    SSH2_MSG_KEX_ROAMING_RESUME
-    SSH2_MSG_KEX_ROAMING_AUTH_REQUIRED
-    SSH2_MSG_KEX_ROAMING_AUTH
-    SSH2_MSG_KEX_ROAMING_AUTH_OK
-    SSH2_MSG_KEX_ROAMING_AUTH_FAIL
-);
-my @SSH_ERR = qw(
-    SSH_ERR_SUCCESS
-    SSH_ERR_INTERNAL_ERROR
-    SSH_ERR_ALLOC_FAIL
-    SSH_ERR_MESSAGE_INCOMPLETE
-    SSH_ERR_INVALID_FORMAT
-    SSH_ERR_BIGNUM_IS_NEGATIVE
-    SSH_ERR_BIGNUM_TOO_LARGE
-    SSH_ERR_ECPOINT_TOO_LARGE
-    SSH_ERR_NO_BUFFER_SPACE
-    SSH_ERR_INVALID_ARGUMENT
-    SSH_ERR_KEY_BITS_MISMATCH
-    SSH_ERR_EC_CURVE_INVALID
-    SSH_ERR_KEY_TYPE_MISMATCH
-    SSH_ERR_KEY_TYPE_UNKNOWN
-    SSH_ERR_EC_CURVE_MISMATCH
-    SSH_ERR_EXPECTED_CERT
-    SSH_ERR_KEY_LACKS_CERTBLOB
-    SSH_ERR_KEY_CERT_UNKNOWN_TYPE
-    SSH_ERR_KEY_CERT_INVALID_SIGN_KEY
-    SSH_ERR_KEY_INVALID_EC_VALUE
-    SSH_ERR_SIGNATURE_INVALID
-    SSH_ERR_LIBCRYPTO_ERROR
-    SSH_ERR_UNEXPECTED_TRAILING_DATA
-    SSH_ERR_SYSTEM_ERROR
-    SSH_ERR_KEY_CERT_INVALID
-    SSH_ERR_AGENT_COMMUNICATION
-    SSH_ERR_AGENT_FAILURE
-    SSH_ERR_DH_GEX_OUT_OF_RANGE
-    SSH_ERR_DISCONNECTED
-    SSH_ERR_MAC_INVALID
-    SSH_ERR_NO_CIPHER_ALG_MATCH
-    SSH_ERR_NO_MAC_ALG_MATCH
-    SSH_ERR_NO_COMPRESS_ALG_MATCH
-    SSH_ERR_NO_KEX_ALG_MATCH
-    SSH_ERR_NO_HOSTKEY_ALG_MATCH
-    SSH_ERR_NO_HOSTKEY_LOADED
-    SSH_ERR_PROTOCOL_MISMATCH
-    SSH_ERR_NO_PROTOCOL_VERSION
-    SSH_ERR_NEED_REKEY
+my %SSH_ERR = reverse (
+    SSH_ERR_SUCCESS                   => 0,
+    SSH_ERR_INTERNAL_ERROR            => -1,
+    SSH_ERR_ALLOC_FAIL                => -2,
+    SSH_ERR_MESSAGE_INCOMPLETE        => -3,
+    SSH_ERR_INVALID_FORMAT            => -4,
+    SSH_ERR_BIGNUM_IS_NEGATIVE        => -5,
+    SSH_ERR_BIGNUM_TOO_LARGE          => -6,
+    SSH_ERR_ECPOINT_TOO_LARGE         => -7,
+    SSH_ERR_NO_BUFFER_SPACE           => -8,
+    SSH_ERR_INVALID_ARGUMENT          => -9,
+    SSH_ERR_KEY_BITS_MISMATCH         => -10,
+    SSH_ERR_EC_CURVE_INVALID          => -11,
+    SSH_ERR_KEY_TYPE_MISMATCH         => -12,
+    SSH_ERR_KEY_TYPE_UNKNOWN          => -13,
+    SSH_ERR_EC_CURVE_MISMATCH         => -14,
+    SSH_ERR_EXPECTED_CERT             => -15,
+    SSH_ERR_KEY_LACKS_CERTBLOB        => -16,
+    SSH_ERR_KEY_CERT_UNKNOWN_TYPE     => -17,
+    SSH_ERR_KEY_CERT_INVALID_SIGN_KEY => -18,
+    SSH_ERR_KEY_INVALID_EC_VALUE      => -19,
+    SSH_ERR_SIGNATURE_INVALID         => -20,
+    SSH_ERR_LIBCRYPTO_ERROR           => -21,
+    SSH_ERR_UNEXPECTED_TRAILING_DATA  => -22,
+    SSH_ERR_SYSTEM_ERROR              => -23,
+    SSH_ERR_KEY_CERT_INVALID          => -24,
+    SSH_ERR_AGENT_COMMUNICATION       => -25,
+    SSH_ERR_AGENT_FAILURE             => -26,
+    SSH_ERR_DH_GEX_OUT_OF_RANGE       => -27,
+    SSH_ERR_DISCONNECTED              => -28,
+    SSH_ERR_MAC_INVALID               => -29,
+    SSH_ERR_NO_CIPHER_ALG_MATCH       => -30,
+    SSH_ERR_NO_MAC_ALG_MATCH          => -31,
+    SSH_ERR_NO_COMPRESS_ALG_MATCH     => -32,
+    SSH_ERR_NO_KEX_ALG_MATCH          => -33,
+    SSH_ERR_NO_HOSTKEY_ALG_MATCH      => -34,
+    SSH_ERR_NO_HOSTKEY_LOADED         => -35,
+    SSH_ERR_PROTOCOL_MISMATCH         => -36,
+    SSH_ERR_NO_PROTOCOL_VERSION       => -37,
+    SSH_ERR_NEED_REKEY                => -38,
 );
 my @SSH_FUNC = qw (
     error_string
+    type_to_string
 );
 our @EXPORT_OK = (
-    @SSH_MSG,
-    @SSH_ERR,
-    @SSH_FUNC
+    values %SSH_MSG,
+    values %SSH_ERR,
+    @SSH_FUNC,
 );
 
 our %EXPORT_TAGS = (
-    all => [@SSH_MSG, @SSH_ERR, @SSH_FUNC],
+    all => [values %SSH_MSG, values %SSH_ERR, @SSH_FUNC],
     functions => [@SSH_FUNC],
-    errno => [@SSH_ERR],
-    msgno => [@SSH_MSG]
+    errno => [values %SSH_ERR],
+    msgno => [values %SSH_MSG],
 );
 
 Exporter::export_ok_tags("all", "functions", "errno", "msgno");
@@ -237,6 +237,24 @@ sub can_write {
     return length($_[0]->output_ptr());
 }
 
+sub type_to_string {
+    if (@_ == 1) {
+	if (looks_like_number($_[0])) {
+	    return $SSH_MSG{$_[0]};
+	} else {
+	    confess("First argument must be a number!");
+	}
+    } elsif (@_ == 2) {
+	# First arg is assumed to be $self
+	if (looks_like_number($_[1])) {
+	    return $SSH_MSG{$_[1]};
+	} else {
+	    confess("First argument must be a number!");
+	}
+    }
+    confess("Usage: \$obj->type_to_string(\$n) or type_to_string(\$n)!");
+}
+
 sub error_string {
     if (@_ == 1) {
 	if (looks_like_number($_[0])) {
@@ -245,10 +263,11 @@ sub error_string {
 	    confess("First argument must be a number!");
 	}
     } elsif (@_ == 2) {
+	# First arg is assumed to be $self
 	if (looks_like_number($_[1])) {
 	    return Net::SSH::LibSSH::_error_string($_[1]);
 	} else {
-	    confess("Second argument must be a number!");
+	    confess("First argument must be a number!");
 	}
     }
     confess("Usage: \$obj->error_string(\$n) or error_string(\$n)!");
