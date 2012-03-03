@@ -7,6 +7,7 @@
 #include <sys/types.h>
 
 /* Include stuff of OpenSSH */
+#include <authfile.h>
 #include <buffer.h>
 #include <cipher.h>
 #include <authfile.h>
@@ -47,7 +48,6 @@ static SV *verify_host_key_cb = NULL;
  */
 int
 _convert_pem_to_sshkey(struct ssh *ssh, char *key, struct sshkey **sshkey) {
-    struct sshkey *parsed_key = NULL;
     struct sshbuf *key_buf = NULL;
     int ret = SSH_ERR_SUCCESS;
 
@@ -59,9 +59,7 @@ _convert_pem_to_sshkey(struct ssh *ssh, char *key, struct sshkey **sshkey) {
 	if ((ret = sshbuf_put(key_buf, key, strlen(key))) != 0)
 	    goto out;
 
-	if ((*sshkey = key_parse_private(key_buf, "hostkey", "",
-	    NULL)) == NULL) {
-	    ret = SSH_ERR_INVALID_FORMAT;
+	if ((ret = sshkey_parse_private(key_buf, "hostkey", "", sshkey, NULL)) != 0) {
 	    goto out;
 	}
     } else {
@@ -76,10 +74,6 @@ _convert_pem_to_sshkey(struct ssh *ssh, char *key, struct sshkey **sshkey) {
 out:
     if (key_buf)
 	sshbuf_free(key_buf);
-
-    if (ret != 0)
-	if (parsed_key)
-	    sshkey_free(parsed_key);
 
     return ret;
 }
@@ -303,8 +297,8 @@ packet_payload(ssh)
     Net::SSH::LibSSH *ssh;
 
     INIT:
-	void *data;
-	u_int len;
+	u_char *data;
+	size_t len;
 
     CODE:
 	data = ssh_packet_payload(ssh, &len);
@@ -312,8 +306,11 @@ packet_payload(ssh)
 	if (data == NULL)
 	    XSRETURN_UNDEF;
 
-	ST(0) = sv_2mortal(newSVpv("", 0));
+	RETVAL = newSVpv("", 0);
 	sv_setpvn(ST(0), (char *)data, len);
+
+    OUTPUT:
+	RETVAL
 
 int
 packet_put(ssh, type, data)
@@ -376,15 +373,18 @@ output_ptr(ssh)
 
     INIT:
 	void *data;
-	u_int len;
+	size_t len;
 
     CODE:
 	data = ssh_output_ptr(ssh, &len);
 	if (data == NULL)
 	    XSRETURN_UNDEF;
 
-	ST(0) = sv_2mortal(newSVpv("", 0));
+	RETVAL = newSVpv("", 0);
 	sv_setpvn(ST(0), (char *)data, len);
+
+    OUTPUT:
+	RETVAL
 
 int
 output_consume(ssh, len)
@@ -406,7 +406,10 @@ _error_string(n)
 
     CODE:
 	errstr = ssh_err(n);
-	ST(0) = sv_2mortal(newSVpv(errstr, 0));
+	RETVAL = newSVpv(errstr, 0);
+
+    OUTPUT:
+	RETVAL
 
 void
 set_verify_host_key_callback(ssh, cb)

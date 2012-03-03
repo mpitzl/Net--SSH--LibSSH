@@ -24,7 +24,7 @@ is($ssh->error_string(-38),
     'rekeying not supported by peer',
     'Check error string for SSH_ERR_NEED_REKEY'
 );
-is($ssh->error_string(-39),
+is($ssh->error_string(-80),
     'unknown error',
     'Check error string for unknown error code'
 );
