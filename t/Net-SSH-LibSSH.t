@@ -1,15 +1,12 @@
 # Before `make install' is performed this script should be runnable with
 # `make test'. After `make install' it should work as `perl Net-SSH-LibSSH.t'
-
-#########################
-
 # change 'tests => 1' to 'tests => last_test_to_print';
-
+#########################
 use strict;
 use warnings;
 
-use Test::More tests => 15;
-BEGIN { use_ok('Net::SSH::LibSSH', qw(error_string)) };
+use Test::More tests => 18;
+BEGIN { use_ok('Net::SSH::LibSSH', qw(:all)) };
 
 # Create new object
 my $ssh = Net::SSH::LibSSH->new(
@@ -35,7 +32,7 @@ eval {Net::SSH::LibSSH->error_string()};
 ok($@, "Calling error_string() without argument dies:\n$@");
 
 eval {Net::SSH::LibSSH->error_string('lalala')};
-ok($@, "Calling error_string() with string dies:\n$@");
+ok($@, "Calling error_string() with string dies:\n $@");
 
 my $privkey = qq{-----BEGIN RSA PRIVATE KEY-----
 MIIEogIBAAKCAQEAuWTBp2h37Qr9ycFl0l6Mp6SS0bZ1irWqClFQ6py1/aQABEw2
@@ -92,3 +89,14 @@ ok($ret == 0, "Error loading valid public key: " . $client->error_string($ret));
 
 $ret = $client->add_hostkey(substr($pubkey, 100, 10, 'x' x 10));
 ok($ret < 0, "Loading invalid public key returns no error!");
+
+ok(type_to_string(1) eq 'SSH2_MSG_DISCONNECT',
+    'Convert numeric type into string'
+);
+ok(disconnect_to_string(10) eq 'SSH2_DISCONNECT_CONNECTION_LOST',
+    'Convert numeric disconnect reason code into string'
+);
+ok(chan_open_to_string(1) eq 'SSH2_OPEN_ADMINISTRATIVELY_PROHIBITED',
+    'Convert numeric channel open reason code into string'
+);
+

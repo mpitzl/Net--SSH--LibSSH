@@ -72,25 +72,26 @@ my %SSH_MSG = reverse (
     SSH2_MSG_SERVICE_ACCEPT                => 6,
     SSH2_MSG_KEXINIT                       => 20,
     SSH2_MSG_NEWKEYS                       => 21,
+# Reverse lookup will always give lowest common denominator
     SSH2_MSG_KEXDH_INIT                    => 30,
     SSH2_MSG_KEXDH_REPLY                   => 31,
-    SSH2_MSG_KEX_DH_GEX_REQUEST_OLD        => 30,
-    SSH2_MSG_KEX_DH_GEX_GROUP              => 31,
+#    SSH2_MSG_KEX_DH_GEX_REQUEST_OLD        => 30,
+#    SSH2_MSG_KEX_DH_GEX_GROUP              => 31,
     SSH2_MSG_KEX_DH_GEX_INIT               => 32,
     SSH2_MSG_KEX_DH_GEX_REPLY              => 33,
     SSH2_MSG_KEX_DH_GEX_REQUEST            => 34,
-    SSH2_MSG_KEX_ECDH_INIT                 => 30,
-    SSH2_MSG_KEX_ECDH_REPLY                => 31,
+#    SSH2_MSG_KEX_ECDH_INIT                 => 30,
+#    SSH2_MSG_KEX_ECDH_REPLY                => 31,
     SSH2_MSG_USERAUTH_REQUEST              => 50,
     SSH2_MSG_USERAUTH_FAILURE              => 51,
     SSH2_MSG_USERAUTH_SUCCESS              => 52,
     SSH2_MSG_USERAUTH_BANNER               => 53,
     SSH2_MSG_USERAUTH_PK_OK                => 60,
-    SSH2_MSG_USERAUTH_PASSWD_CHANGEREQ     => 60,
-    SSH2_MSG_USERAUTH_INFO_REQUEST         => 60,
+#    SSH2_MSG_USERAUTH_PASSWD_CHANGEREQ     => 60,
+#    SSH2_MSG_USERAUTH_INFO_REQUEST         => 60,
     SSH2_MSG_USERAUTH_INFO_RESPONSE        => 61,
-    SSH2_MSG_USERAUTH_JPAKE_CLIENT_STEP1   => 60,
-    SSH2_MSG_USERAUTH_JPAKE_SERVER_STEP1   => 61,
+#    SSH2_MSG_USERAUTH_JPAKE_CLIENT_STEP1   => 60,
+#    SSH2_MSG_USERAUTH_JPAKE_SERVER_STEP1   => 61,
     SSH2_MSG_USERAUTH_JPAKE_CLIENT_STEP2   => 62,
     SSH2_MSG_USERAUTH_JPAKE_SERVER_STEP2   => 63,
     SSH2_MSG_USERAUTH_JPAKE_CLIENT_CONFIRM => 64,
@@ -109,11 +110,11 @@ my %SSH_MSG = reverse (
     SSH2_MSG_CHANNEL_REQUEST               => 98,
     SSH2_MSG_CHANNEL_SUCCESS               => 99,
     SSH2_MSG_CHANNEL_FAILURE               => 100,
-    SSH2_MSG_KEX_ROAMING_RESUME            => 30,
-    SSH2_MSG_KEX_ROAMING_AUTH_REQUIRED     => 31,
-    SSH2_MSG_KEX_ROAMING_AUTH              => 32,
-    SSH2_MSG_KEX_ROAMING_AUTH_OK           => 33,
-    SSH2_MSG_KEX_ROAMING_AUTH_FAIL         => 34,
+#    SSH2_MSG_KEX_ROAMING_RESUME            => 30,
+#    SSH2_MSG_KEX_ROAMING_AUTH_REQUIRED     => 31,
+#    SSH2_MSG_KEX_ROAMING_AUTH              => 32,
+#    SSH2_MSG_KEX_ROAMING_AUTH_OK           => 33,
+#    SSH2_MSG_KEX_ROAMING_AUTH_FAIL         => 34,
 );
 
 # Constants for error codes returned by various functions
@@ -199,24 +200,87 @@ my %SSH_ERR = reverse (
     SSH_ERR_NO_PROTOCOL_VERSION       => -37,
     SSH_ERR_NEED_REKEY                => -38,
 );
+
+# Constants for various reason codes
+use constant {
+    # Disconnect reason codes
+    SSH2_DISCONNECT_HOST_NOT_ALLOWED_TO_CONNECT    => 1,
+    SSH2_DISCONNECT_PROTOCOL_ERROR                 => 2,
+    SSH2_DISCONNECT_KEY_EXCHANGE_FAILED            => 3,
+    SSH2_DISCONNECT_HOST_AUTHENTICATION_FAILED     => 4,
+    SSH2_DISCONNECT_MAC_ERROR                      => 5,
+    SSH2_DISCONNECT_COMPRESSION_ERROR              => 6,
+    SSH2_DISCONNECT_SERVICE_NOT_AVAILABLE          => 7,
+    SSH2_DISCONNECT_PROTOCOL_VERSION_NOT_SUPPORTED => 8,
+    SSH2_DISCONNECT_HOST_KEY_NOT_VERIFIABLE        => 9,
+    SSH2_DISCONNECT_CONNECTION_LOST                => 10,
+    SSH2_DISCONNECT_BY_APPLICATION                 => 11,
+    SSH2_DISCONNECT_TOO_MANY_CONNECTIONS           => 12,
+    SSH2_DISCONNECT_AUTH_CANCELLED_BY_USER         => 13,
+    SSH2_DISCONNECT_NO_MORE_AUTH_METHODS_AVAILABLE => 14,
+    SSH2_DISCONNECT_ILLEGAL_USER_NAME              => 15,
+
+    # Channel open failure reason codes
+    SSH2_OPEN_ADMINISTRATIVELY_PROHIBITED          => 1,
+    SSH2_OPEN_CONNECT_FAILED                       => 2,
+    SSH2_OPEN_UNKNOWN_CHANNEL_TYPE                 => 3,
+    SSH2_OPEN_RESOURCE_SHORTAGE                    => 4,
+};
+my %SSH_DISCONNECT = reverse(
+    # Disconnect reason codes
+    SSH2_DISCONNECT_HOST_NOT_ALLOWED_TO_CONNECT    => 1,
+    SSH2_DISCONNECT_PROTOCOL_ERROR                 => 2,
+    SSH2_DISCONNECT_KEY_EXCHANGE_FAILED            => 3,
+    SSH2_DISCONNECT_HOST_AUTHENTICATION_FAILED     => 4,
+    SSH2_DISCONNECT_MAC_ERROR                      => 5,
+    SSH2_DISCONNECT_COMPRESSION_ERROR              => 6,
+    SSH2_DISCONNECT_SERVICE_NOT_AVAILABLE          => 7,
+    SSH2_DISCONNECT_PROTOCOL_VERSION_NOT_SUPPORTED => 8,
+    SSH2_DISCONNECT_HOST_KEY_NOT_VERIFIABLE        => 9,
+    SSH2_DISCONNECT_CONNECTION_LOST                => 10,
+    SSH2_DISCONNECT_BY_APPLICATION                 => 11,
+    SSH2_DISCONNECT_TOO_MANY_CONNECTIONS           => 12,
+    SSH2_DISCONNECT_AUTH_CANCELLED_BY_USER         => 13,
+    SSH2_DISCONNECT_NO_MORE_AUTH_METHODS_AVAILABLE => 14,
+    SSH2_DISCONNECT_ILLEGAL_USER_NAME              => 15,
+);
+my %SSH_CHAN_OPEN = reverse (
+    # Channel open failure reason codes
+    SSH2_OPEN_ADMINISTRATIVELY_PROHIBITED          => 1,
+    SSH2_OPEN_CONNECT_FAILED                       => 2,
+    SSH2_OPEN_UNKNOWN_CHANNEL_TYPE                 => 3,
+    SSH2_OPEN_RESOURCE_SHORTAGE                    => 4,
+);
+
 my @SSH_FUNC = qw (
     error_string
     type_to_string
+    disconnect_to_string
+    chan_open_to_string
 );
 our @EXPORT_OK = (
     values %SSH_MSG,
     values %SSH_ERR,
+    values %SSH_DISCONNECT,
+    values %SSH_CHAN_OPEN,
     @SSH_FUNC,
 );
 
 our %EXPORT_TAGS = (
-    all => [values %SSH_MSG, values %SSH_ERR, @SSH_FUNC],
+    all => [
+	values %SSH_MSG,
+	values %SSH_ERR,
+	values %SSH_DISCONNECT,
+	values %SSH_CHAN_OPEN,
+	@SSH_FUNC
+    ],
     functions => [@SSH_FUNC],
     errno => [values %SSH_ERR],
     msgno => [values %SSH_MSG],
+    reason => [values %SSH_DISCONNECT, values %SSH_CHAN_OPEN],
 );
 
-Exporter::export_ok_tags("all", "functions", "errno", "msgno");
+Exporter::export_ok_tags("all", "functions", "errno", "msgno", "reason");
 
 our $VERSION = '0.02';
 
@@ -253,6 +317,42 @@ sub type_to_string {
 	}
     }
     confess("Usage: \$obj->type_to_string(\$n) or type_to_string(\$n)!");
+}
+
+sub disconnect_to_string {
+    if (@_ == 1) {
+	if (looks_like_number($_[0])) {
+	    return $SSH_DISCONNECT{$_[0]};
+	} else {
+	    confess("First argument must be a number!");
+	}
+    } elsif (@_ == 2) {
+	# First arg is assumed to be $self
+	if (looks_like_number($_[1])) {
+	    return $SSH_DISCONNECT{$_[1]};
+	} else {
+	    confess("First argument must be a number!");
+	}
+    }
+    confess("Usage: \$obj->disconnect_to_string(\$n) or disconnect_to_string(\$n)!");
+}
+
+sub chan_open_to_string {
+    if (@_ == 1) {
+	if (looks_like_number($_[0])) {
+	    return $SSH_CHAN_OPEN{$_[0]};
+	} else {
+	    confess("First argument must be a number!");
+	}
+    } elsif (@_ == 2) {
+	# First arg is assumed to be $self
+	if (looks_like_number($_[1])) {
+	    return $SSH_CHAN_OPEN{$_[1]};
+	} else {
+	    confess("First argument must be a number!");
+	}
+    }
+    confess("Usage: \$obj->chan_open_to_string(\$n) or chan_open_to_string(\$n)!");
 }
 
 sub error_string {
@@ -454,11 +554,45 @@ network.
 Returns a string describing the error code given. Can be either called as method
 of the class or imported by C<use Net::SSH::LibSSH qw(error_string);>.
 
+=item type_to_string($type)
+
+Returns the packet type as readable string, e.g. SSH2_MSG_USERAUTH_REQUEST.
+Can be either called as method of the class or imported by
+C<use Net::SSH::LibSSH qw(type_to_string);>.
+Some packet type codes are used multiple times. In these cases, the most common
+name will be returned.
+
+=item disconnect_to_string($reason)
+
+Returns the reason code of an SSH disconnect message as readable string, e.g.
+SSH2_DISCONNECT_HOST_NOT_ALLOWED_TO_CONNECT.
+Can be either called as method of the class or imported by
+C<use Net::SSH::LibSSH qw(disconnect_to_string);>.
+
+=item chan_open_to_string($reason)
+
+Returns the reason code of an SSH channel open failure message as readable string, e.g.
+SSH2_OPEN_ADMINISTRATIVELY_PROHIBITED.
+Can be either called as method of the class or imported by
+C<use Net::SSH::LibSSH qw(chan_open_to_string);>.
+
 =item set_verify_host_key_callback($coderef)
 
 Installs the given $coderef as new custom host key verification handler. Gets
 called from libssh. The callback function given gets the host key in PEM format
-and must return 0 on positive key verification or -1 otherwise.
+and must return 1 on positive key verification or 0 otherwise.
+
+=item set_application_data($appdata)
+
+Stores the given data in the Net::SSH::LibSSH object (or more accurate: stores a
+pointer to your perl data inside the ssh C-struct).
+The stored data is passed as second argument to an own host key verification
+callback.
+
+=item get_application_data()
+
+Retrieve the application data stored inside the Net::SSH::LibSSH object. Returns
+undef if there has been no data stored previously.
 
 =back
 
@@ -472,102 +606,124 @@ The following tags are supported:
     :functions - what you could call without a LibSSH object
     :errno - constants for errors from ssh2.h
     :msgno - constants for messages from ssh2.h
+    :reason - constants for different reason codes used in protocol messages
 
 The only function where it makes sense to call it without a LibSSH object is
 currently C<error_string>.
 
 The message constants are:
-SSH2_MSG_DISCONNECT
-SSH2_MSG_IGNORE
-SSH2_MSG_UNIMPLEMENTED
-SSH2_MSG_DEBUG
-SSH2_MSG_SERVICE_REQUEST
-SSH2_MSG_SERVICE_ACCEPT
-SSH2_MSG_KEXINIT
-SSH2_MSG_NEWKEYS
-SSH2_MSG_KEXDH_INIT
-SSH2_MSG_KEXDH_REPLY
-SSH2_MSG_KEX_DH_GEX_REQUEST_OLD
-SSH2_MSG_KEX_DH_GEX_GROUP
-SSH2_MSG_KEX_DH_GEX_INIT
-SSH2_MSG_KEX_DH_GEX_REPLY
-SSH2_MSG_KEX_DH_GEX_REQUEST
-SSH2_MSG_KEX_ECDH_INIT
-SSH2_MSG_KEX_ECDH_REPLY
-SSH2_MSG_USERAUTH_REQUEST
-SSH2_MSG_USERAUTH_FAILURE
-SSH2_MSG_USERAUTH_SUCCESS
-SSH2_MSG_USERAUTH_BANNER
-SSH2_MSG_USERAUTH_PK_OK
-SSH2_MSG_USERAUTH_PASSWD_CHANGEREQ
-SSH2_MSG_USERAUTH_INFO_REQUEST
-SSH2_MSG_USERAUTH_INFO_RESPONSE
-SSH2_MSG_USERAUTH_JPAKE_CLIENT_STEP1
-SSH2_MSG_USERAUTH_JPAKE_SERVER_STEP1
-SSH2_MSG_USERAUTH_JPAKE_CLIENT_STEP2
-SSH2_MSG_USERAUTH_JPAKE_SERVER_STEP2
-SSH2_MSG_USERAUTH_JPAKE_CLIENT_CONFIRM
-SSH2_MSG_USERAUTH_JPAKE_SERVER_CONFIRM
-SSH2_MSG_GLOBAL_REQUEST
-SSH2_MSG_REQUEST_SUCCESS
-SSH2_MSG_REQUEST_FAILURE
-SSH2_MSG_CHANNEL_OPEN
-SSH2_MSG_CHANNEL_OPEN_CONFIRMATION
-SSH2_MSG_CHANNEL_OPEN_FAILURE
-SSH2_MSG_CHANNEL_WINDOW_ADJUST
-SSH2_MSG_CHANNEL_DATA
-SSH2_MSG_CHANNEL_EXTENDED_DATA
-SSH2_MSG_CHANNEL_EOF
-SSH2_MSG_CHANNEL_CLOSE
-SSH2_MSG_CHANNEL_REQUEST
-SSH2_MSG_CHANNEL_SUCCESS
-SSH2_MSG_CHANNEL_FAILURE
-SSH2_MSG_KEX_ROAMING_RESUME
-SSH2_MSG_KEX_ROAMING_AUTH_REQUIRED
-SSH2_MSG_KEX_ROAMING_AUTH
-SSH2_MSG_KEX_ROAMING_AUTH_OK
-SSH2_MSG_KEX_ROAMING_AUTH_FAIL
+ SSH2_MSG_DISCONNECT
+ SSH2_MSG_IGNORE
+ SSH2_MSG_UNIMPLEMENTED
+ SSH2_MSG_DEBUG
+ SSH2_MSG_SERVICE_REQUEST
+ SSH2_MSG_SERVICE_ACCEPT
+ SSH2_MSG_KEXINIT
+ SSH2_MSG_NEWKEYS
+ SSH2_MSG_KEXDH_INIT
+ SSH2_MSG_KEXDH_REPLY
+ SSH2_MSG_KEX_DH_GEX_REQUEST_OLD
+ SSH2_MSG_KEX_DH_GEX_GROUP
+ SSH2_MSG_KEX_DH_GEX_INIT
+ SSH2_MSG_KEX_DH_GEX_REPLY
+ SSH2_MSG_KEX_DH_GEX_REQUEST
+ SSH2_MSG_KEX_ECDH_INIT
+ SSH2_MSG_KEX_ECDH_REPLY
+ SSH2_MSG_USERAUTH_REQUEST
+ SSH2_MSG_USERAUTH_FAILURE
+ SSH2_MSG_USERAUTH_SUCCESS
+ SSH2_MSG_USERAUTH_BANNER
+ SSH2_MSG_USERAUTH_PK_OK
+ SSH2_MSG_USERAUTH_PASSWD_CHANGEREQ
+ SSH2_MSG_USERAUTH_INFO_REQUEST
+ SSH2_MSG_USERAUTH_INFO_RESPONSE
+ SSH2_MSG_USERAUTH_JPAKE_CLIENT_STEP1
+ SSH2_MSG_USERAUTH_JPAKE_SERVER_STEP1
+ SSH2_MSG_USERAUTH_JPAKE_CLIENT_STEP2
+ SSH2_MSG_USERAUTH_JPAKE_SERVER_STEP2
+ SSH2_MSG_USERAUTH_JPAKE_CLIENT_CONFIRM
+ SSH2_MSG_USERAUTH_JPAKE_SERVER_CONFIRM
+ SSH2_MSG_GLOBAL_REQUEST
+ SSH2_MSG_REQUEST_SUCCESS
+ SSH2_MSG_REQUEST_FAILURE
+ SSH2_MSG_CHANNEL_OPEN
+ SSH2_MSG_CHANNEL_OPEN_CONFIRMATION
+ SSH2_MSG_CHANNEL_OPEN_FAILURE
+ SSH2_MSG_CHANNEL_WINDOW_ADJUST
+ SSH2_MSG_CHANNEL_DATA
+ SSH2_MSG_CHANNEL_EXTENDED_DATA
+ SSH2_MSG_CHANNEL_EOF
+ SSH2_MSG_CHANNEL_CLOSE
+ SSH2_MSG_CHANNEL_REQUEST
+ SSH2_MSG_CHANNEL_SUCCESS
+ SSH2_MSG_CHANNEL_FAILURE
+ SSH2_MSG_KEX_ROAMING_RESUME
+ SSH2_MSG_KEX_ROAMING_AUTH_REQUIRED
+ SSH2_MSG_KEX_ROAMING_AUTH
+ SSH2_MSG_KEX_ROAMING_AUTH_OK
+ SSH2_MSG_KEX_ROAMING_AUTH_FAIL
 
 The error constants are:
-SSH_ERR_SUCCESS
-SSH_ERR_INTERNAL_ERROR
-SSH_ERR_ALLOC_FAIL
-SSH_ERR_MESSAGE_INCOMPLETE
-SSH_ERR_INVALID_FORMAT
-SSH_ERR_BIGNUM_IS_NEGATIVE
-SSH_ERR_BIGNUM_TOO_LARGE
-SSH_ERR_ECPOINT_TOO_LARGE
-SSH_ERR_NO_BUFFER_SPACE
-SSH_ERR_INVALID_ARGUMENT
-SSH_ERR_KEY_BITS_MISMATCH
-SSH_ERR_EC_CURVE_INVALID
-SSH_ERR_KEY_TYPE_MISMATCH
-SSH_ERR_KEY_TYPE_UNKNOWN
-SSH_ERR_EC_CURVE_MISMATCH
-SSH_ERR_EXPECTED_CERT
-SSH_ERR_KEY_LACKS_CERTBLOB
-SSH_ERR_KEY_CERT_UNKNOWN_TYPE
-SSH_ERR_KEY_CERT_INVALID_SIGN_KEY
-SSH_ERR_KEY_INVALID_EC_VALUE
-SSH_ERR_SIGNATURE_INVALID
-SSH_ERR_LIBCRYPTO_ERROR
-SSH_ERR_UNEXPECTED_TRAILING_DATA
-SSH_ERR_SYSTEM_ERROR
-SSH_ERR_KEY_CERT_INVALID
-SSH_ERR_AGENT_COMMUNICATION
-SSH_ERR_AGENT_FAILURE
-SSH_ERR_DH_GEX_OUT_OF_RANGE
-SSH_ERR_DISCONNECTED
-SSH_ERR_MAC_INVALID
-SSH_ERR_NO_CIPHER_ALG_MATCH
-SSH_ERR_NO_MAC_ALG_MATCH
-SSH_ERR_NO_COMPRESS_ALG_MATCH
-SSH_ERR_NO_KEX_ALG_MATCH
-SSH_ERR_NO_HOSTKEY_ALG_MATCH
-SSH_ERR_NO_HOSTKEY_LOADED
-SSH_ERR_PROTOCOL_MISMATCH
-SSH_ERR_NO_PROTOCOL_VERSION
-SSH_ERR_NEED_REKEY
+ SSH_ERR_SUCCESS
+ SSH_ERR_INTERNAL_ERROR
+ SSH_ERR_ALLOC_FAIL
+ SSH_ERR_MESSAGE_INCOMPLETE
+ SSH_ERR_INVALID_FORMAT
+ SSH_ERR_BIGNUM_IS_NEGATIVE
+ SSH_ERR_BIGNUM_TOO_LARGE
+ SSH_ERR_ECPOINT_TOO_LARGE
+ SSH_ERR_NO_BUFFER_SPACE
+ SSH_ERR_INVALID_ARGUMENT
+ SSH_ERR_KEY_BITS_MISMATCH
+ SSH_ERR_EC_CURVE_INVALID
+ SSH_ERR_KEY_TYPE_MISMATCH
+ SSH_ERR_KEY_TYPE_UNKNOWN
+ SSH_ERR_EC_CURVE_MISMATCH
+ SSH_ERR_EXPECTED_CERT
+ SSH_ERR_KEY_LACKS_CERTBLOB
+ SSH_ERR_KEY_CERT_UNKNOWN_TYPE
+ SSH_ERR_KEY_CERT_INVALID_SIGN_KEY
+ SSH_ERR_KEY_INVALID_EC_VALUE
+ SSH_ERR_SIGNATURE_INVALID
+ SSH_ERR_LIBCRYPTO_ERROR
+ SSH_ERR_UNEXPECTED_TRAILING_DATA
+ SSH_ERR_SYSTEM_ERROR
+ SSH_ERR_KEY_CERT_INVALID
+ SSH_ERR_AGENT_COMMUNICATION
+ SSH_ERR_AGENT_FAILURE
+ SSH_ERR_DH_GEX_OUT_OF_RANGE
+ SSH_ERR_DISCONNECTED
+ SSH_ERR_MAC_INVALID
+ SSH_ERR_NO_CIPHER_ALG_MATCH
+ SSH_ERR_NO_MAC_ALG_MATCH
+ SSH_ERR_NO_COMPRESS_ALG_MATCH
+ SSH_ERR_NO_KEX_ALG_MATCH
+ SSH_ERR_NO_HOSTKEY_ALG_MATCH
+ SSH_ERR_NO_HOSTKEY_LOADED
+ SSH_ERR_PROTOCOL_MISMATCH
+ SSH_ERR_NO_PROTOCOL_VERSION
+ SSH_ERR_NEED_REKEY
+
+The reason code constants are:
+ SSH2_DISCONNECT_HOST_NOT_ALLOWED_TO_CONNECT
+ SSH2_DISCONNECT_PROTOCOL_ERROR
+ SSH2_DISCONNECT_KEY_EXCHANGE_FAILED
+ SSH2_DISCONNECT_HOST_AUTHENTICATION_FAILED
+ SSH2_DISCONNECT_MAC_ERROR
+ SSH2_DISCONNECT_COMPRESSION_ERROR
+ SSH2_DISCONNECT_SERVICE_NOT_AVAILABLE
+ SSH2_DISCONNECT_PROTOCOL_VERSION_NOT_SUPPORTED
+ SSH2_DISCONNECT_HOST_KEY_NOT_VERIFIABLE
+ SSH2_DISCONNECT_CONNECTION_LOST
+ SSH2_DISCONNECT_BY_APPLICATION
+ SSH2_DISCONNECT_TOO_MANY_CONNECTIONS
+ SSH2_DISCONNECT_AUTH_CANCELLED_BY_USER
+ SSH2_DISCONNECT_NO_MORE_AUTH_METHODS_AVAILABLE
+ SSH2_DISCONNECT_ILLEGAL_USER_NAME
+ SSH2_OPEN_ADMINISTRATIVELY_PROHIBITED
+ SSH2_OPEN_CONNECT_FAILED
+ SSH2_OPEN_UNKNOWN_CHANNEL_TYPE
+ SSH2_OPEN_RESOURCE_SHORTAGE
 
 =head1 AUTHOR
 

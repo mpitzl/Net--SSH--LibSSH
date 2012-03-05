@@ -134,7 +134,6 @@ _exec_callback(struct sshkey *key, struct ssh *ssh) {
     int ret = 0, count = 0;
     SV *sshkey_converted;
 
-    PUSHMARK(SP);
 
     /* Convert the given key into PEM format */
     sshkey_converted = _convert_sshkey_to_pem(key);
@@ -142,8 +141,13 @@ _exec_callback(struct sshkey *key, struct ssh *ssh) {
     if (SvLEN(sshkey_converted) == 0)
 	croak("Error converting SSH key into PEM format!");
 
-    /* Push the converted key onto perl's stack */
+    /* Push the converted key and optional application data onto perl's stack */
+    PUSHMARK(SP);
     XPUSHs(sshkey_converted);
+    if (ssh->app_data != NULL)
+	XPUSHs(ssh->app_data);
+    else
+	XPUSHs(&PL_sv_undef);
     PUTBACK;
 
     count = call_sv(verify_host_key_cb, G_SCALAR);
@@ -153,9 +157,12 @@ _exec_callback(struct sshkey *key, struct ssh *ssh) {
     if (count != 1)
 	croak("Host key verification callback must return a scalar!");
 
-    PUTBACK; /* XXX Really needed? */
-
     ret = POPi;
+
+    /*
+     * Perl should return 1 on success, 0 on error but libopenssh expects 0 on
+     * success and -1 on error
+     */
     return (ret > 0 ? 0 : -1);
 }
 
@@ -244,7 +251,7 @@ void
 free(ssh)
     Net::SSH::LibSSH *ssh;
 
-    CODE:
+    PPCODE:
 	ssh_free(ssh);
 
 int
@@ -307,7 +314,7 @@ packet_payload(ssh)
 	    XSRETURN_UNDEF;
 
 	RETVAL = newSVpv("", 0);
-	sv_setpvn(ST(0), (char *)data, len);
+	sv_setpvn(RETVAL, (char *)data, len);
 
     OUTPUT:
 	RETVAL
@@ -381,7 +388,7 @@ output_ptr(ssh)
 	    XSRETURN_UNDEF;
 
 	RETVAL = newSVpv("", 0);
-	sv_setpvn(ST(0), (char *)data, len);
+	sv_setpvn(RETVAL, (char *)data, len);
 
     OUTPUT:
 	RETVAL
@@ -416,10 +423,36 @@ set_verify_host_key_callback(ssh, cb)
     Net::SSH::LibSSH *ssh;
     SV *cb;
 
-    CODE:
+    PPCODE:
+	/* cb must be a CODE ref */
+	if (!SvROK(cb) || SvTYPE(SvRV(cb)) != SVt_PVCV)
+	    croak("Callback must be a CODE ref!");
+
 	if (verify_host_key_cb == NULL)
 	    verify_host_key_cb = newSVsv(cb);
 	else
 	    SvSetSV(verify_host_key_cb, cb);
 
 	ssh_set_verify_host_key_callback(ssh, _exec_callback);
+
+void
+set_application_data(ssh, app_data)
+    Net::SSH::LibSSH *ssh;
+    SV *app_data;
+
+    PPCODE:
+	SvREFCNT_inc(app_data); // XXX: Ansonsten ist u.U. der Wert spaeter undef
+	ssh->app_data = app_data;
+
+SV*
+get_application_data(ssh)
+    Net::SSH::LibSSH *ssh;
+
+    CODE:
+	if(ssh->app_data != NULL)
+	    RETVAL = ssh->app_data;
+	else
+	    RETVAL = &PL_sv_undef;
+
+    OUTPUT:
+	RETVAL
