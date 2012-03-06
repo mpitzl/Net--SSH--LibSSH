@@ -10,5 +10,5 @@ WriteMakefile(
 	'-L../libopenssh/ssh/lib/ -lssh -lcrypto -lz -lgssapi -lkrb5'
     ],
     INC           => '-I../libopenssh/ssh/ -I.',
-    CCFLAGS      => '-Wall',
+    CCFLAGS      => '-Wall -Werror',
 );
