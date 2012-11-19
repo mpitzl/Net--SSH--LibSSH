@@ -5,7 +5,7 @@
 use strict;
 use warnings;
 
-use Test::More tests => 18;
+use Test::More tests => 30;
 BEGIN { use_ok('Net::SSH::LibSSH', qw(:all)) };
 
 # Create new object
@@ -91,12 +91,48 @@ $ret = $client->add_hostkey(substr($pubkey, 100, 10, 'x' x 10));
 ok($ret < 0, "Loading invalid public key returns no error!");
 
 ok(type_to_string(1) eq 'SSH2_MSG_DISCONNECT',
-    'Convert numeric type into string'
+    'Convert numeric type to string'
 );
 ok(disconnect_to_string(10) eq 'SSH2_DISCONNECT_CONNECTION_LOST',
-    'Convert numeric disconnect reason code into string'
+    'Convert numeric disconnect reason code to string'
 );
 ok(chan_open_to_string(1) eq 'SSH2_OPEN_ADMINISTRATIVELY_PROHIBITED',
-    'Convert numeric channel open reason code into string'
+    'Convert numeric channel open reason code to string'
+);
+ok(sftp_msg_to_string(1) eq 'SSH2_FXP_INIT',
+    'Convert numeric sftp message type to string'
+);
+ok(sftp_status_to_string(1) eq 'SSH2_FX_EOF',
+    'Convert numeric sftp status code to string'
+);
+ok(sftp_openmode_to_string(1) eq 'SSH2_FXF_READ',
+    'Convert numeric sftp open mode to string'
+);
+ok(sftp_attr_to_string(1) eq 'SSH2_FILEXFER_ATTR_SIZE',
+    'Convert numeric attr flag to string'
 );
 
+can_ok($ssh, 'fingerprint');
+
+# This will give a warning about an incorrect passphrase
+ok(!defined(fingerprint('lalalala')), "Fingerprint for invalid key");
+
+ok(!defined(fingerprint('')),         "Fingerprint for empty key");
+
+ok(!defined(fingerprint(undef)),      "Fingerprint for undefined key");
+
+my $fp = $ssh->fingerprint($privkey);
+ok($fp eq '61:a4:41:56:12:da:33:98:09:dd:04:12:1c:d8:20:4e',
+    "Private key fingerprint");
+
+$fp = fingerprint($privkey);
+ok($fp eq '61:a4:41:56:12:da:33:98:09:dd:04:12:1c:d8:20:4e',
+    "Private key fingerprint");
+
+$fp = $ssh->fingerprint($pubkey);
+ok($fp eq '14:6f:30:b7:a4:b9:13:80:74:3c:e7:c9:9d:dc:1e:85',
+    "Public key fingerprint");
+
+$fp = fingerprint($pubkey);
+ok($fp eq '14:6f:30:b7:a4:b9:13:80:74:3c:e7:c9:9d:dc:1e:85',
+    "Public key fingerprint");

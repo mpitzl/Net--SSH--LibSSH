@@ -404,20 +404,6 @@ output_consume(ssh, len)
     OUTPUT:
 	RETVAL
 
-SV*
-_error_string(n)
-    int n;
-
-    INIT:
-	const char *errstr;
-
-    CODE:
-	errstr = ssh_err(n);
-	RETVAL = newSVpv(errstr, 0);
-
-    OUTPUT:
-	RETVAL
-
 void
 set_verify_host_key_callback(ssh, cb)
     Net::SSH::LibSSH *ssh;
@@ -453,6 +439,78 @@ get_application_data(ssh)
 	    RETVAL = ssh->app_data;
 	else
 	    RETVAL = &PL_sv_undef;
+
+    OUTPUT:
+	RETVAL
+
+
+SV*
+_error_string(n)
+    int n;
+
+    CODE:
+	RETVAL = newSVpv(ssh_err(n), 0);
+
+    OUTPUT:
+	RETVAL
+
+SV*
+_fingerprint(key)
+    SV *key;
+
+    INIT:
+	struct sshkey *parsed_key;
+	struct sshbuf *buffer;
+	char *key_str;
+	char *fp;
+	int ret;
+	STRLEN len;
+
+    CODE:
+	key_str = SvPV(key, len);
+
+	if (len == 0)
+	    XSRETURN_UNDEF;
+
+	if ((parsed_key = sshkey_new(KEY_UNSPEC)) == NULL) {
+	    warn("Error allocating sshkey!");
+	    XSRETURN_UNDEF;
+	}
+
+	/* First try to parse a public key as in ~/.ssh/authorized_keys */
+	if ((ret = sshkey_read(parsed_key, &key_str)) != 0) {
+	    /* No success, now try PEM format */
+	    if ((buffer = sshbuf_new()) == NULL) {
+		warn("Error allocating sshbuf!");
+		sshkey_free(parsed_key);
+		XSRETURN_UNDEF;
+	    }
+
+	    if ((ret = sshbuf_put(buffer, key_str, len)) != 0) {
+		warn("Error putting key into buffer: %s", ssh_err(ret));
+		sshkey_free(parsed_key);
+		sshbuf_free(buffer);
+		XSRETURN_UNDEF;
+	    }
+
+	    if ((ret = sshkey_parse_private(buffer, "", "internal", &parsed_key,
+		NULL)) != 0) {
+		warn("Error parsing key: %s", ssh_err(ret));
+		sshkey_free(parsed_key);
+		sshbuf_free(buffer);
+		XSRETURN_UNDEF;
+	    }
+	    sshbuf_free(buffer);
+	}
+
+	fp = sshkey_fingerprint(parsed_key, SSH_FP_MD5, SSH_FP_HEX);
+
+	if (fp == NULL)
+	    RETVAL = &PL_sv_undef;
+	else
+	    RETVAL = newSVpv(fp, 0);
+
+	sshkey_free(parsed_key);
 
     OUTPUT:
 	RETVAL
