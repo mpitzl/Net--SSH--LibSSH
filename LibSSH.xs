@@ -13,6 +13,7 @@
 #include <authfile.h>
 #include <key.h>
 #include <kex.h>
+#include <sshbuf.h>
 #include <ssh_api.h>
 #include <myproposal.h>
 
@@ -304,7 +305,7 @@ packet_payload(ssh)
     Net::SSH::LibSSH *ssh;
 
     INIT:
-	u_char *data;
+	const u_char *data;
 	size_t len;
 
     CODE:
@@ -379,7 +380,7 @@ output_ptr(ssh)
     Net::SSH::LibSSH *ssh;
 
     INIT:
-	void *data;
+	const u_char *data;
 	size_t len;
 
     CODE:
