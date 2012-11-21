@@ -8,11 +8,6 @@
 
 /* Include stuff of OpenSSH */
 #include <authfile.h>
-#include <buffer.h>
-#include <cipher.h>
-#include <authfile.h>
-#include <key.h>
-#include <kex.h>
 #include <sshbuf.h>
 #include <ssh_api.h>
 #include <myproposal.h>
